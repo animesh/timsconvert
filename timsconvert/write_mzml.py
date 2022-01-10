@@ -1,5 +1,5 @@
-from timsconvert.parse_lcms import *
-from timsconvert.parse_maldi import *
+from timsconvert.lcms.parse_lcms import *
+from timsconvert.maldi.parse_maldi import *
 from timsconvert.utils.timestamp import *
 from psims.mzml import MzMLWriter
 import os
