@@ -132,8 +132,6 @@ def run_tims_converter(args):
 if __name__ == '__main__':
     # Parse arguments.
     arguments = get_args()
-    # Hardcode centroid to True. Current code does not support profile.
-    arguments['centroid'] = True
 
     # Check arguments.
     args_check(arguments)

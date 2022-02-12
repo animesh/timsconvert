@@ -23,6 +23,8 @@ def get_args():
     parser.add_argument('--outfile', help='User defined filename for output if converting a single file, otherwise'
                                           'files will have same filename and overwrite each other. Default is'
                                           'none. Empty string.', default='', type=str)
+    parser.add_argument('--centroid', help='Choose whether or not exported data should be centroid.',
+                        action='store_true')
     parser.add_argument('--ms2_only', help='Boolean flag that specifies only MS2 spectra should be converted.',
                         action='store_true')
     parser.add_argument('--ms1_groupby', help='Define whether an individual MS1 spectrum contains one frame (and'
