@@ -59,6 +59,37 @@ tar xvf 230414_Mathilde_3_Slot2-48_1_4330.d.tar
 **On Linux/WSL2:**
 ```
 LD_LIBRARY_PATH=/mnt/z/Download/timsdata-2.21.0.4/timsdata/linux64 ./timsread TIMSTOF/LARS/2023/230414\ mathilde/230414_Mathilde_3_Slot2-48_1_4330.d
+TDF file TIMSTOF/LARS/2023/230414 mathilde/230414_Mathilde_3_Slot2-48_1_4330.d contains 66565 frames.
+Frame 1 has retention time 0.65112501 seconds
+Scan 42 --- 1/K0: 1.5713494
+x (index)    :    288484 
+x (m/z)      : 1072.4621 
+y (intensity):        78 
+
+Scan 46 --- 1/K0: 1.5671132
+x (index)    :    298252 
+x (m/z)      : 1123.5056 
+y (intensity):        38 
+
+Scan 47 --- 1/K0: 1.5660539
+
+...
+...
+...
+
+Frame 66565 has retention time 7199.938 seconds
+Scan 90 --- 1/K0: 1.5204062
+x (index)    :    166320 
+x (m/z)      : 534.30582 
+y (intensity):        10 
+...
+...
+...
+Scan 813 --- 1/K0: 0.72330414
+x (index)    :    304931 
+x (m/z)      : 1159.0903 
+y (intensity):        10 
+
 ```
 
 > **Note:** If you see an error about `libtimsdata.so` not being found, you must set the `LD_LIBRARY_PATH` environment variable to the directory containing `libtimsdata.so` as shown above. This only affects the current run and does not change your system settings.

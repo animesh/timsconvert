@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     std::cout.precision(OUTPUT_PRECISION);
 
     std::string tdfDirectory(argv[1]);
-    std::string tdfFile = tdfDirectory + "\\analysis.tdf";
+    std::string tdfFile = tdfDirectory + "/analysis.tdf";
 
     try
     {
