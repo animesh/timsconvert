@@ -1,1 +1,0 @@
-pip-licenses --with-system --with-authors --with-maintainers --with-urls --with-license-file --no-license-path -f plain-vertical --output-file third-party-licenses.txt

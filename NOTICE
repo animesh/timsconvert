@@ -1,0 +1,16 @@
+NOTICE
+
+This project is a fork of the original *timsconvert* repository developed by gtluu,
+available at: https://github.com/gtluu/timsconvert
+
+Original code is licensed under the Apache License, Version 2.0.
+
+Modifications and additional contributions made in this repository are:
+© 2023–2025 Animesh Sharma
+
+All original authors retain their rights under the Apache License 2.0.
+
+Unless otherwise stated, new code authored by Animesh Sharma may also be reused
+under the MIT License in accordance with the dual-licensing terms.
+
+See LICENSE.md and LICENSE-ANIMESH.md for full details.

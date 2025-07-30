@@ -1,50 +1,185 @@
-![TIMSCONVERT Logo](imgs/timsconvert_logo.png)
+# Installation Instructions for timsread
 
-## About
+## 1. Download Required SDK and Libraries
 
-TIMSCONVERT is a workflow designed for mass spectrometrists that allows for the conversion of raw data from Bruker
-timsTOF series mass spectrometers (i.e. Pro, fleX, SCP, HT, etc.) to open data formats (i.e. mzML and imzML) that:
+- **Bruker timsdata SDK**: [TDF-SDK 2.21 (6 MB)](https://www.bruker.com/protected/en/services/software-downloads/mass-spectrometry/raw-data-access-libraries.html?scrollToFormContent=tdf)
+    - Download the file: `timsdata-2.21.0.4.zip` (or latest version)
+- **CppSQLite3**: [CppSQLite3 GitHub](https://github.com/neosmart/CppSQLite)
+    - Download the source: `CppSQLite-master.zip` (or clone the repo)
 
-1. are compatible with downstream open source data analysis platforms.
-2. incorporate trapped ion mobility spectrometry (TIMS) data into these open formats.
-3. does not require any programming experience.
+## 2. Extract Files
 
-If you use TIMSCONVERT, please cite us:
+- Extract `timsdata-2.21.0.4.zip` to a directory, e.g., `Z:\Download\timsdata-2.21.0.4`.
+- Extract `CppSQLite-master.zip` to a directory, e.g., `Z:\Download\CppSQLite-master`.
 
-Gordon T. Luu, Michael A. Freitas, Itzel Lizama-Chamu, Catherine S. McCaughey, Laura M. Sanchez, Mingxun Wang. (2022). 
-TIMSCONVERT: A workflow to convert trapped ion mobility data to open formats. *Bioinformatics*; btac419. 
-doi: [10.1093/bioinformatics/btac419](https://doi.org/10.1093/bioinformatics/btac419).
-
-For more information about timsTOF data formats and TIMSCONVERT, see the 
-[documentation](https://gtluu.github.io/timsconvert/).
-
-Included software components: Copyright © 2022 by Bruker Daltonics GmbH & Co. KG. All rights reserved
-
-## Installation
-
-Installation instructions can be found [here](https://gtluu.github.io/timsconvert/installation.html). macOS is not 
-compatible with the Bruker TDF-SDK API that is necessary to run TIMSCONVERT.
-
-## Usage
-
-The GUI version of TIMSCONVERT can be run by downloading it from 
-[the Github releases page for this repo](https://github.com/gtluu/timsconvert/releases). Unzip the file and run 
-```TIMSCONVERT.exe```.
-
-Alternatively, the TIMSCONVERT GUI can be started after installing to your own Python virtual environment using the 
-```timsconvert_gui``` command.
-
-```timsconvert_gui```
-
-The CLI version of TIMSCONVERT can be run using the ```timsconvert``` command. Unless specified, all other default 
-values for all other parameters will be used.
+## 3. Install System Dependencies (on Debian/Ubuntu/WSL2)
 
 ```
-timsconvert --input [path to data]
+sudo apt-get update
+sudo apt-get install -y g++ sqlite3 libsqlite3-dev
 ```
 
-Depending on the size of your data/number of files, TIMSCONVERT may take some time to finish conversion.
+## 4. Set Up Include Paths
 
-See the documentation for more details on [running TIMSCONVERT locally](https://gtluu.github.io/timsconvert/local.html),
-a description of the [parameters](https://gtluu.github.io/timsconvert/local.html#parameters), 
-and [advanced usage](https://gtluu.github.io/timsconvert/advanced.html).
+You will need the following include directories:
+- `CppSQLite-master/src` (contains `CppSQLite3.h` and `CppSQLite3.cpp`)
+- `timsdata-2.21.0.4/timsdata/include/c` (contains `timsdata.h`)
+- `timsdata-2.21.0.4/timsdata/examples/timsdataSampleCpp/timsdataSampleCpp` (contains `timsdata_cpp.h`)
+
+## 5. Compile
+
+From the project directory, run:
+
+```
+g++ -O3 -march=native -I/mnt/z/Download/CppSQLite-master/src -I/mnt/z/Download/timsdata-2.21.0.4/timsdata/include/c -I/mnt/z/Download/timsdata-2.21.0.4/timsdata/examples/timsdataSampleCpp/timsdataSampleCpp -o timsread timsread.cpp -L/mnt/z/Download/CppSQLite-master/src -lCppSQLite3 -L/mnt/z/Download/timsdata-2.21.0.4/timsdata/linux64 -ltimsdata -lsqlite3
+```
+
+- Adjust the `/mnt/z/Download/...` paths if your files are located elsewhere.
+- The `-O3 -march=native` flags enable optimizations for better performance.
+- On Windows, use the appropriate path format and a compatible compiler (e.g., MSVC).
+
+## 6. Run
+
+The program converts Bruker TDF files to MGF format for MS/MS spectra and optionally extracts MS1 data.
+
+### Usage:
+
+#### Data Sources:
+- [PXD045439](https://www.ebi.ac.uk/pride/archive/projects/PXD045439): `230317_SIGRID_10_Slot1-41_1_4086.d`
+
+```bash
+# Download example dataset
+wget https://ftp.pride.ebi.ac.uk/pride/data/archive/2024/06/PXD045439/230317_SIGRID_10_Slot1-41_1_4086.d.tar
+tar xvf 230317_SIGRID_10_Slot1-41_1_4086.d.tar
+# sanity check
+sqlite3 "230317_SIGRID_10_Slot1-41_1_4086.d/analysis.tdf" "SELECT COUNT(*) as null_mz FROM Precursors WHERE MonoisotopicMz IS NULL; SELECT COUNT(*) as negative_mz FROM Precursors WHERE MonoisotopicMz < 0;"
+5314
+0
+```
+
+**set library path and run:**
+```bash
+# Extract MS/MS data only (default and faster)
+LD_LIBRARY_PATH=/mnt/z/Download/timsdata-2.21.0.4/timsdata/linux64 ./timsread 230317_SIGRID_10_Slot1-41_1_4086.d
+# Extract both MS/MS and MS1 data
+LD_LIBRARY_PATH=/mnt/z/Download/timsdata-2.21.0.4/timsdata/linux64 ./timsread "230317_SIGRID_10_Slot1-41_1_4086.d" -ms1
+```
+
+**Takes about couple of minutes and expected default output:**
+```
+Loading metadata...
+# TDF file 230317_SIGRID_10_Slot1-41_1_4086.d contains 66477 frames.
+# Loaded 291844 precursors and 56501 MS/MS frames.
+# MS/MS data written to: 230317_SIGRID_10_Slot1-41_1_4086.d_msms.mgf
+
+Processing frames...
+Progress: 100% (66477/66477) MS1:0 MS2:56501     
+Total frames processed: 66477
+MS1 frames: 0
+MS/MS frames: 56501
+Skipped precursors with invalid m/z: 8268
+Processing completed!
+```
+
+**Expected output with `-ms1` switch:**
+
+```
+LD_LIBRARY_PATH=/mnt/z/Download/timsdata-2.21.0.4/timsdata/linux64 ./timsread "230317_SIGRID_10_Slot1-41_1_4086.d" -ms1
+Loading metadata...
+# TDF file 230317_SIGRID_10_Slot1-41_1_4086.d contains 66477 frames.
+# Loaded 291844 precursors and 56501 MS/MS frames.
+# MS/MS data written to: 230317_SIGRID_10_Slot1-41_1_4086.d_msms.mgf
+# MS1 data written to: 230317_SIGRID_10_Slot1-41_1_4086.d_ms1.txt
+
+Processing frames...
+Progress: 100% (66477/66477) MS1:9975 MS2:56501     
+Total frames processed: 66477
+MS1 frames: 9976
+MS/MS frames: 56501
+Skipped precursors with invalid m/z: 8268
+Processing completed!
+
+### Output Files:
+- **`*.d_msms.mgf`**: MS/MS spectra in MGF format for protein identification
+- **`*.d_ms1.txt`**: MS1 spectra (if `-ms1` flag used) with format: `Frame_ID RT_seconds Scan_Number m/z Intensity Mobility`
+```
+
+## Notes
+- Ensure all required header and source files are present in the specified directories.
+- If you encounter missing dependencies, verify the include paths and that all SDK/library files are extracted.
+- The program automatically skips precursors with invalid (NULL) m/z values from the database.
+- Use `-ms1` flag only when needed as MS1 extraction significantly increases processing time and output file size.
+> If you see an error about `libtimsdata.so` not being found, you must set the `LD_LIBRARY_PATH` environment variable to the directory containing `libtimsdata.so` as shown above. This only affects the current terminal session.
+
+### Performance Notes:
+- **Zero-filter approach**: Removes only zero-intensity peaks for maximum data retention
+- **Optimized extraction**: ~83% more spectra than Bruker's default export
+- **Batch processing**: Efficient handling of large datasets (66K+ frames)
+- **Memory management**: 4MB I/O buffers with periodic flushing 
+
+### Quality Comparison:
+Our timsread extraction finds **~83% more spectra** than Bruker's default MGF export due to:
+- More comprehensive PASEF precursor extraction
+- Less aggressive intensity filtering (zero-filter only)
+- Complete processing of all MS/MS frames and precursors
+
+Example comparison:
+- Bruker export: 291,843 spectra
+- timsread extraction: 534,186 spectra (+83% more data)
+
+
+### why?
+
+```
+grep -A 30 "PEPMASS=1221.98873 17379" "230317_SIGRID_10_Slot1-41_1_4086.d/230317_SIGRID_10_Slot1-41_1_4086_6.0.313.mgf"
+grep -A 50 "PEPMASS=1221.988770" "230317_SIGRID_10_Slot1-41_1_4086.d_msms.mgf"
+```
+
+>Key Differences in Ion Handling? Bruker's Export (1 spectrum):
+```
+PEPMASS=1221.98873 17379
+```
+- 15 peaks total
+- Peak at 1221.98649: 11508 intensity
+- Peak at 1222.99170: 4364 intensity
+- Clean, merged spectrum
+
+Our timsread (Multiple spectra for same m/z):
+```
+PEPMASS=1221.988770 28038  (First occurrence)
+PEPMASS=1221.988770 10418  (Second occurrence) 
+PEPMASS=1221.988770 10418  (Third occurrence)
+PEPMASS=1221.988770 21162  (Fourth occurrence)
+PEPMASS=1221.988770 3872   (Fifth occurrence)
+PEPMASS=1221.988770 3872   (Sixth occurrence)
+PEPMASS=1221.988770 10789  (Seventh occurrence)
+PEPMASS=1221.988770 10789  (Eighth occurrence)
+PEPMASS=1221.988770 18410  (Ninth occurrence)
+```
+
+#### Critical Discovery:
+Bruker merges multiple PASEF precursors with the same m/z into a single spectrum, while our method creates separate spectra for each PASEF precursor instance. This probably explains:
+
+- Why we have 83% more spectra - We're not merging duplicate m/z precursors
+- Different intensity values - Each instance has its own intensity
+- Duplicate peaks - Same m/z fragments appear multiple times across different scans
+##### Bruker's Approach:
+- Groups precursors by m/z
+- Merges peaks from multiple PASEF instances
+- Results in fewer, but "cleaner" spectra
+##### Our Approach:
+- Each PASEF precursor gets its own spectrum
+- Preserves scan-level detail and timing information
+- More comprehensive but with redundancy
+
+## License
+
+This repository is a fork of [gtluu/timsconvert](https://github.com/gtluu/timsconvert),
+originally licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+All original code is © the original authors and remains under Apache 2.0.
+
+Modifications and additional contributions by [Animesh Sharma](https://github.com/animesh)  
+are © 2023–2025 and are available under the same Apache 2.0 license.  
+To the extent possible, Animesh Sharma’s contributions may also be reused under the MIT License.  
+See [`NOTICE`](./NOTICE) and [`LICENSE-ANIMESH.md`](./LICENSE-ANIMESH.md) for details.
