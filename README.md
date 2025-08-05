@@ -1,5 +1,19 @@
 # Installation Instructions for timsread
 
+`timsread` is a high-performance C++ tool for converting Bruker TimsTOF (TDF) files to MGF format for MS/MS proteomics analysis. This repository includes both the standalone C++ executable and a Nextflow pipeline for automated, scalable processing.
+
+## Table of Contents
+1. [Download Required SDK and Libraries](#1-download-required-sdk-and-libraries)
+2. [Extract Files](#2-extract-files)
+3. [Install System Dependencies](#3-install-system-dependencies-on-debianubuntuwsl2)
+4. [Set Up Include Paths](#4-set-up-include-paths)
+5. [Compile](#5-compile)
+6. [Run](#6-run)
+7. [Nextflow Pipeline](#7-nextflow-pipeline)
+8. [Performance Notes](#performance-notes)
+9. [Quality Comparison](#quality-comparison)
+10. [License](#license)
+
 ## 1. Download Required SDK and Libraries
 
 - **Bruker timsdata SDK**: [TDF-SDK 2.21 (6 MB)](https://www.bruker.com/protected/en/services/software-downloads/mass-spectrometry/raw-data-access-libraries.html?scrollToFormContent=tdf)
@@ -98,10 +112,58 @@ MS1 frames: 9976
 MS/MS frames: 56501
 Skipped precursors with invalid m/z: 8268
 Processing completed!
+```
 
 ### Output Files:
 - **`*.d_msms.mgf`**: MS/MS spectra in MGF format for protein identification
 - **`*.d_ms1.txt`**: MS1 spectra (if `-ms1` flag used) with format: `Frame_ID RT_seconds Scan_Number m/z Intensity Mobility`
+
+## 7. Nextflow Pipeline
+
+This repository includes a Nextflow pipeline (`nextflow.nf`) for automated processing of TDF files using the `timsread` tool.
+
+### Prerequisites for Nextflow Pipeline:
+- [Nextflow](https://www.nextflow.io/) installed
+- Bruker timsdata SDK available at `/mnt/z/Download/timsdata-2.21.0.4/timsdata/linux64`
+- Compiled `timsread` executable in the project directory
+
+### Pipeline Usage:
+
+```bash
+# Extract MS/MS spectra only (default, faster)
+nextflow run nextflow.nf --input 230317_SIGRID_10_Slot1-41_1_4086.d
+
+# Extract both MS/MS and MS1 spectra
+nextflow run nextflow.nf --input 230317_SIGRID_10_Slot1-41_1_4086.d --ms2_only False
+
+# Custom output directory
+nextflow run nextflow.nf --input <tdf_directory> --publishdir custom_output
+```
+
+### Pipeline Features:
+- **Automated Processing**: Handles library path configuration and tool execution
+- **Scalable**: Can process multiple TDF files in parallel
+- **Flexible Output**: Optional MS1 extraction with `--ms2_only False`
+- **Quality Control**: Generates summary statistics for processed files
+- **Resume Capability**: Use `-resume` to continue interrupted runs
+
+### Pipeline Output:
+- **MGF Files**: MS/MS spectra ready for protein identification
+- **MS1 Files**: Optional MS1 spectra data (if requested)
+- **Summary Report**: `results_file.tsv` with processing statistics
+
+### Example Pipeline Run:
+```bash
+# Download and extract test dataset
+wget https://ftp.pride.ebi.ac.uk/pride/data/archive/2024/06/PXD045439/230317_SIGRID_10_Slot1-41_1_4086.d.tar
+tar xf 230317_SIGRID_10_Slot1-41_1_4086.d.tar
+
+# Run Nextflow pipeline
+nextflow run nextflow.nf --input 230317_SIGRID_10_Slot1-41_1_4086.d
+
+# Check results
+ls nf_output/
+# Output: 230317_SIGRID_10_Slot1-41_1_4086.d_msms.mgf  results_file.tsv
 ```
 
 ## Notes
@@ -109,15 +171,18 @@ Processing completed!
 - If you encounter missing dependencies, verify the include paths and that all SDK/library files are extracted.
 - The program automatically skips precursors with invalid (NULL) m/z values from the database.
 - Use `-ms1` flag only when needed as MS1 extraction significantly increases processing time and output file size.
+- **For automated processing**: Use the included Nextflow pipeline (see [Section 7](#7-nextflow-pipeline)) which handles library paths and batch processing automatically.
 > If you see an error about `libtimsdata.so` not being found, you must set the `LD_LIBRARY_PATH` environment variable to the directory containing `libtimsdata.so` as shown above. This only affects the current terminal session.
 
-### Performance Notes:
+## Performance Notes
+
+### Technical Details:
 - **Zero-filter approach**: Removes only zero-intensity peaks for maximum data retention
 - **Optimized extraction**: ~83% more spectra than Bruker's default export
 - **Batch processing**: Efficient handling of large datasets (66K+ frames)
 - **Memory management**: 4MB I/O buffers with periodic flushing 
 
-### Quality Comparison:
+## Quality Comparison
 Our timsread extraction finds **~83% more spectra** than Bruker's default MGF export due to:
 - More comprehensive PASEF precursor extraction
 - Less aggressive intensity filtering (zero-filter only)
